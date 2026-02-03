@@ -84,116 +84,125 @@
   <!-- NO lives outside the button row so it can run freely -->
   <button id="no">NO 🙄</button>
 
-  <script>
-    const yesBtn = document.getElementById("yes");
-    const noBtn = document.getElementById("no");
-    const message = document.getElementById("message");
-    const mainImage = document.getElementById("mainImage");
+<script>
+  const yesBtn = document.getElementById("yes");
+  const noBtn = document.getElementById("no");
+  const message = document.getElementById("message");
+  const mainImage = document.getElementById("mainImage");
 
-    const noMessages = [
-      "Bancyboo! You know better. Pick the ONLY right answer ;)",
-      "You goofy! Pick YES babe",
-      "My lovely! I will treat you right my queen. Click YES plzz",
-      "MY JAANU! MY SOULMATE! YES Click kardo yaar!",
-      "Aye you! My baby! Stop playing hard to get. I know you want to be my valentine theheh!"
-    ];
+  const noMessages = [
+    "Bancyboo! You know better. Pick the ONLY right answer ;)",
+    "You goofy! Pick YES babe",
+    "My lovely! I will treat you right my queen. Click YES plzz",
+    "MY JAANU! MY SOULMATE! YES Click kardo yaar!",
+    "Aye you! My baby! Stop being hard to get. I know you want to be my valentine theheh!"
+  ];
 
-    const yesMessage = "That’s what I thought😎. You are officially locked in for ICYBANS 1st Valentine’s Day. No refunds no takebacks 😉❤️🖤";
+  const yesMessage =
+    "That’s what I thought 😎. Congratulations you are officially locked in for ICYBANS 1st Valentine’s Day. No refunds no takebacks. Have fun 😉❤️🖤";
 
-    let noDisabled = false; // becomes true after YES
+  let noDisabled = false;
 
-    function setRandomNoMessage() {
-      const pick = noMessages[Math.floor(Math.random() * noMessages.length)];
-      message.innerText = pick;
-    }
+  function setRandomNoMessage() {
+    message.innerText = noMessages[Math.floor(Math.random() * noMessages.length)];
+  }
 
-    function clamp(val, min, max) {
-      return Math.min(Math.max(val, min), max);
-    }
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
 
-    function fleeFromPointer(clientX, clientY) {
-      if (noDisabled) return;
+  // Teleport NO randomly, but not too close to the cursor
+  function teleportNoAwayFromCursor(cx, cy) {
+    if (noDisabled) return;
 
-      const padding = 18;
+    const padding = 20;
 
-      // Button size
-      const rect = noBtn.getBoundingClientRect();
-      const bw = rect.width;
-      const bh = rect.height;
+    const bw = noBtn.offsetWidth;
+    const bh = noBtn.offsetHeight;
 
-      // Safe bounds in viewport
-      const minX = padding;
-      const maxX = window.innerWidth - bw - padding;
-      const minY = padding + 80; // keep it away from header/text area
-      const maxY = window.innerHeight - bh - padding;
+    const minX = padding;
+    const maxX = window.innerWidth - bw - padding;
 
-      // Current position (px)
-      const currentLeft = rect.left;
-      const currentTop = rect.top;
+    // keep it away from header area so it doesn't sit on your text
+    const minY = 140;
+    const maxY = window.innerHeight - bh - padding;
 
-      // Move away from the pointer direction
-      const dx = currentLeft - clientX;
-      const dy = currentTop - clientY;
+    // if screen is tiny, fall back safely
+    const safeMaxX = Math.max(maxX, minX);
+    const safeMaxY = Math.max(maxY, minY);
 
-      // If pointer is close, jump farther
-      const jump = 180;
+    // distance threshold from cursor
+    const minDist = 160;
 
-      let newLeft = currentLeft + (dx === 0 ? (Math.random() > 0.5 ? jump : -jump) : Math.sign(dx) * jump);
-      let newTop  = currentTop  + (dy === 0 ? (Math.random() > 0.5 ? jump : -jump) : Math.sign(dy) * jump);
+    let x, y;
+    let tries = 0;
 
-      // Add a bit of randomness so it feels "alive"
-      newLeft += Math.floor((Math.random() - 0.5) * 80);
-      newTop  += Math.floor((Math.random() - 0.5) * 80);
+    do {
+      x = randomInt(minX, safeMaxX);
+      y = randomInt(minY, safeMaxY);
+      tries++;
 
-      // Clamp within screen so it never "disappears"
-      newLeft = clamp(newLeft, minX, maxX);
-      newTop  = clamp(newTop, minY, maxY);
+      const dx = x - cx;
+      const dy = y - cy;
 
-      // Apply
-      noBtn.style.left = `${newLeft}px`;
-      noBtn.style.top = `${newTop}px`;
-      noBtn.style.transform = "none"; // since we're using direct px
-    }
+      // stop trying after some attempts just in case of tiny screens
+      if (tries > 25) break;
 
-    // Make it basically unclickable:
-    noBtn.addEventListener("mouseenter", (e) => {
-      setRandomNoMessage();
-      fleeFromPointer(e.clientX, e.clientY);
-    });
+    } while (Math.hypot(x - cx, y - cy) < minDist);
 
-    noBtn.addEventListener("mousemove", (e) => {
-      fleeFromPointer(e.clientX, e.clientY);
-    });
+    noBtn.style.left = `${x}px`;
+    noBtn.style.top = `${y}px`;
+    noBtn.style.transform = "none";
+  }
 
-    // If she tries to click, it flees BEFORE the click lands
-    noBtn.addEventListener("mousedown", (e) => {
-      setRandomNoMessage();
-      fleeFromPointer(e.clientX, e.clientY);
-      e.preventDefault();
-    });
+  // Set NO to absolute from the start so it never "vanishes"
+  noBtn.style.position = "absolute";
 
-    noBtn.addEventListener("click", (e) => {
-      // Safety: if a click ever happens, still don't let it do anything
-      setRandomNoMessage();
-      e.preventDefault();
-    });
+  // Move randomly on hover, move, and before click lands
+  noBtn.addEventListener("mouseenter", (e) => {
+    setRandomNoMessage();
+    teleportNoAwayFromCursor(e.clientX, e.clientY);
+  });
 
-    // YES behavior
-    yesBtn.addEventListener("click", () => {
-      message.innerText = yesMessage;
+  noBtn.addEventListener("mousemove", (e) => {
+    teleportNoAwayFromCursor(e.clientX, e.clientY);
+  });
 
-      // swap picture
-      mainImage.src = "yes.jpg";
+  noBtn.addEventListener("mousedown", (e) => {
+    setRandomNoMessage();
+    teleportNoAwayFromCursor(e.clientX, e.clientY);
+    e.preventDefault();
+  });
 
-      // If yes.jpg is missing, show a helpful hint
-      mainImage.onerror = () => {
-        message.innerText = yesMessage + " (P.S. your yes.jpg file isn’t found — upload/rename it to exactly yes.jpg)";
-      };
+  // If a click somehow happens, still block it
+  noBtn.addEventListener("click", (e) => {
+    setRandomNoMessage();
+    e.preventDefault();
+  });
 
-      // Now NO disappears (ONLY HERE)
-      noDisabled = true;
-      noBtn.style.display = "none";
-    });
-  </script>
+  // YES behavior
+  yesBtn.addEventListener("click", () => {
+    message.innerText = yesMessage;
+
+    mainImage.src = "yes.jpg";
+    mainImage.onerror = () => {
+      message.innerText =
+        yesMessage + " Also upload your yes picture as yes.jpg in the repo root";
+    };
+
+    noDisabled = true;
+    noBtn.style.display = "none";
+  });
+
+  // On load, place NO somewhere random (not centered)
+  window.addEventListener("load", () => {
+    teleportNoAwayFromCursor(window.innerWidth / 2, window.innerHeight / 2);
+  });
+
+  // If window resizes, keep NO in bounds by teleporting once
+  window.addEventListener("resize", () => {
+    teleportNoAwayFromCursor(window.innerWidth / 2, window.innerHeight / 2);
+  });
+</script>
 </body>
 </html>
