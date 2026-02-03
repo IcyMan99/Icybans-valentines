@@ -1,25 +1,140 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Valentine?</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ICYBANS Valentine 💘</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      margin: 0;
+      overflow: hidden; /* prevents scroll bars when NO runs away */
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    #message {
+      margin-top: 10px;
+      margin-bottom: 18px;
+      font-size: 18px;
+      padding: 0 10px;
+      line-height: 1.35;
+    }
+
+    #mainImage {
+      width: min(380px, 85vw);
+      border-radius: 16px;
+      margin: 12px 0 18px 0;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    button {
+      padding: 12px 18px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 12px;
+      border: none;
+      user-select: none;
+    }
+
+    #yes {
+      background: #22c55e;
+      color: white;
+    }
+
+    #no {
+      background: #ef4444;
+      color: white;
+      position: relative; /* switches to absolute when it runs away */
+    }
+  </style>
 </head>
+
 <body>
-  <main class="card">
-    <img class="pic" src="photo.jpg" alt="Goofy pic" />
+  <h1>ICYBANS Valentine 💘</h1>
 
-    <h1>BANCYBOO! Will you be my Valentine? 🫣💘</h1>
+  <!-- Your exact question -->
+  <div id="message">Will you be my valentine? 🙈💘</div>
 
-    <div class="btn-row">
-      <button id="yesBtn" class="btn yes">Yes</button>
-      <button id="noBtn" class="btn no">No</button>
-    </div>
+  <img id="mainImage" src="photo.jpg" alt="Us" />
 
-    <p id="msg" class="msg"></p>
-  </main>
+  <div class="btn-row">
+    <button id="yes">YES 😍</button>
+    <button id="no">NO 🙄</button>
+  </div>
 
-  <script src="script.js"></script>
+  <script>
+    const yesBtn = document.getElementById("yes");
+    const noBtn = document.getElementById("no");
+    const message = document.getElementById("message");
+    const mainImage = document.getElementById("mainImage");
+
+    // NO messages (random)
+    const noMessages = [
+      "Bancyboo! You know better. Pick the ONLY right answer ;) ",
+      "You goofy! Pick YES babe",
+      "My lovely! I will treat you right my queen. Click YES plzz",
+      "MY JAANU! MY SOULMATE! YES Click kardo yaar!",
+      "Aye you! My baby! Stop being hard to get. I know you want to be my valentine theheh!"
+    ];
+
+    // YES message (your exact text)
+    const yesMessage = "That's what I thought 😎😛. Your invitation is confirmed to the first ICYBANS Valentines day 😉❤️🖤";
+
+    function setRandomNoMessage() {
+      const pick = noMessages[Math.floor(Math.random() * noMessages.length)];
+      message.innerText = pick;
+    }
+
+    function moveNoButton() {
+      const padding = 20;
+
+      const maxX = window.innerWidth - noBtn.offsetWidth - padding;
+      const maxY = window.innerHeight - noBtn.offsetHeight - padding;
+
+      const x = Math.floor(Math.random() * Math.max(maxX, padding));
+      const y = Math.floor(Math.random() * Math.max(maxY, padding));
+
+      noBtn.style.position = "absolute";
+      noBtn.style.left = x + "px";
+      noBtn.style.top = y + "px";
+    }
+
+    // Make NO run away on hover or click
+    noBtn.addEventListener("mouseover", () => {
+      setRandomNoMessage();
+      moveNoButton();
+    });
+
+    noBtn.addEventListener("click", () => {
+      setRandomNoMessage();
+      moveNoButton();
+    });
+
+    // YES: change message + swap picture + hide NO
+    yesBtn.addEventListener("click", () => {
+      message.innerText = yesMessage;
+
+      // Swap image after YES
+      mainImage.src = "yes.jpg";
+
+      // NO disappears after YES
+      noBtn.style.display = "none";
+    });
+  </script>
 </body>
 </html>
