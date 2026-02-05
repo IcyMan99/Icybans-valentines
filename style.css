@@ -51,9 +51,13 @@ h1 {
 }
 
 .no {
-  background: #222;
+  background: #ef4444;
   color: white;
+  position: relative; /* STARTS next to YES */
+  z-index: 9999;
+  pointer-events: none; /* still unclickable */
 }
+
 
 .msg {
   margin-top: 14px;
