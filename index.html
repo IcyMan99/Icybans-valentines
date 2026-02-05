@@ -58,11 +58,10 @@
       z-index: 3;
     }
 
-    /* STARTS next to YES */
     #no {
       background: #ef4444;
       color: white;
-      position: relative;       /* key change */
+      position: relative;
       z-index: 3;
     }
   </style>
@@ -75,7 +74,6 @@
 
   <img id="mainImage" src="photo.jpg" alt="Us" />
 
-  <!-- YES and NO start together -->
   <div class="btn-row">
     <button id="yes">YES 😍</button>
     <button id="no">NO 🙄</button>
@@ -109,12 +107,10 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  // After she tries NO, switch it to absolute/fixed and teleport randomly
   function activateRunawayIfNeeded() {
     if (runawayActivated) return;
     runawayActivated = true;
 
-    // convert from "in-row" to free-floating
     noBtn.style.position = "fixed";
     noBtn.style.zIndex = "9999";
     noBtn.style.transform = "none";
@@ -124,14 +120,12 @@
     if (noDisabled) return;
 
     const padding = 20;
-
     const bw = noBtn.offsetWidth || 90;
     const bh = noBtn.offsetHeight || 45;
 
     const minX = padding;
     const maxX = window.innerWidth - bw - padding;
 
-    // keep it away from header area so it doesn't sit on your text/image
     const minY = 160;
     const maxY = window.innerHeight - bh - padding;
 
@@ -154,14 +148,13 @@
     noBtn.style.top = `${y}px`;
   }
 
-  // Proximity escape: if cursor gets close, it runs
   const proximityRadius = 140;
   let lastTeleport = 0;
 
-  function maybeRun(e, showMsg) {
+  // ✅ Every time NO runs away, ALWAYS show a random message
+  function maybeRun(e) {
     if (noDisabled) return;
 
-    // until she approaches NO, it stays next to YES
     const rect = noBtn.getBoundingClientRect();
     const bx = rect.left + rect.width / 2;
     const by = rect.top + rect.height / 2;
@@ -172,17 +165,17 @@
       if (now - lastTeleport < 120) return;
 
       activateRunawayIfNeeded();
-      if (showMsg) setRandomNoMessage();
+      setRandomNoMessage(); // ✅ moved here
       teleportNoAwayFromCursor(e.clientX, e.clientY);
       lastTeleport = now;
     }
   }
 
   // Detect approaching anywhere on the page
-  document.addEventListener("mousemove", (e) => maybeRun(e, false));
+  document.addEventListener("mousemove", maybeRun);
 
-  // If she tries to click near it, show message + run
-  document.addEventListener("mousedown", (e) => maybeRun(e, true));
+  // If she tries to click near it, show message + run (also works on touchpads)
+  document.addEventListener("mousedown", maybeRun);
 
   // Backup: if hover hits it, still runs
   noBtn.addEventListener("mouseenter", (e) => {
@@ -199,7 +192,16 @@
     e.preventDefault();
   });
 
-  // YES behavior
+  // ✅ Mobile support: touch triggers message + run
+  noBtn.addEventListener("touchstart", (e) => {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    activateRunawayIfNeeded();
+    setRandomNoMessage();
+    teleportNoAwayFromCursor(t.clientX, t.clientY);
+    e.preventDefault();
+  }, { passive: false });
+
   yesBtn.addEventListener("click", () => {
     message.innerText = yesMessage;
 
