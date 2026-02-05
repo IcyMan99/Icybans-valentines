@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ICYBANS 1st Valentines DAY 💘</title>
+  <title>ICYBANS 1st Valentines Day 💘</title>
 
   <style>
     body {
@@ -11,9 +11,10 @@
       text-align: center;
       padding: 30px;
       margin: 0;
-      overflow: hidden; /* prevents scrollbars when NO moves */
+      overflow: hidden;
       position: relative;
       min-height: 100vh;
+      box-sizing: border-box;
     }
 
     h1 { margin-bottom: 10px; }
@@ -57,15 +58,12 @@
       z-index: 3;
     }
 
+    /* STARTS next to YES */
     #no {
       background: #ef4444;
       color: white;
-      position: absolute; /* keep it absolute always so it doesn't "vanish" */
-      left: 50%;
-      top: calc(70vh);
-      transform: translate(-50%, -50%);
-      z-index: 9999; /* ALWAYS on top */
-      transition: left 0.08s linear, top 0.08s linear; /* quick smooth flee */
+      position: relative;       /* key change */
+      z-index: 3;
     }
   </style>
 </head>
@@ -77,12 +75,11 @@
 
   <img id="mainImage" src="photo.jpg" alt="Us" />
 
+  <!-- YES and NO start together -->
   <div class="btn-row">
     <button id="yes">YES 😍</button>
+    <button id="no">NO 🙄</button>
   </div>
-
-  <!-- NO lives outside the button row so it can run freely -->
-  <button id="no">NO 🙄</button>
 
 <script>
   const yesBtn = document.getElementById("yes");
@@ -102,6 +99,7 @@
     "That’s what I thought 😎. Congratulations you are officially locked in for ICYBANS 1st Valentine’s Day. No refunds no takebacks. Have fun 😉❤️🖤";
 
   let noDisabled = false;
+  let runawayActivated = false;
 
   function setRandomNoMessage() {
     message.innerText = noMessages[Math.floor(Math.random() * noMessages.length)];
@@ -111,27 +109,35 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  // Teleport NO randomly, but not too close to the cursor
+  // After she tries NO, switch it to absolute/fixed and teleport randomly
+  function activateRunawayIfNeeded() {
+    if (runawayActivated) return;
+    runawayActivated = true;
+
+    // convert from "in-row" to free-floating
+    noBtn.style.position = "fixed";
+    noBtn.style.zIndex = "9999";
+    noBtn.style.transform = "none";
+  }
+
   function teleportNoAwayFromCursor(cx, cy) {
     if (noDisabled) return;
 
     const padding = 20;
 
-    const bw = noBtn.offsetWidth;
-    const bh = noBtn.offsetHeight;
+    const bw = noBtn.offsetWidth || 90;
+    const bh = noBtn.offsetHeight || 45;
 
     const minX = padding;
     const maxX = window.innerWidth - bw - padding;
 
-    // keep it away from header area so it doesn't sit on your text
-    const minY = 140;
+    // keep it away from header area so it doesn't sit on your text/image
+    const minY = 160;
     const maxY = window.innerHeight - bh - padding;
 
-    // if screen is tiny, fall back safely
     const safeMaxX = Math.max(maxX, minX);
     const safeMaxY = Math.max(maxY, minY);
 
-    // distance threshold from cursor
     const minDist = 160;
 
     let x, y;
@@ -141,42 +147,55 @@
       x = randomInt(minX, safeMaxX);
       y = randomInt(minY, safeMaxY);
       tries++;
-
-      const dx = x - cx;
-      const dy = y - cy;
-
-      // stop trying after some attempts just in case of tiny screens
-      if (tries > 25) break;
-
+      if (tries > 30) break;
     } while (Math.hypot(x - cx, y - cy) < minDist);
 
     noBtn.style.left = `${x}px`;
     noBtn.style.top = `${y}px`;
-    noBtn.style.transform = "none";
   }
 
-  // Set NO to absolute from the start so it never "vanishes"
-  noBtn.style.position = "absolute";
+  // Proximity escape: if cursor gets close, it runs
+  const proximityRadius = 140;
+  let lastTeleport = 0;
 
-  // Move randomly on hover, move, and before click lands
+  function maybeRun(e, showMsg) {
+    if (noDisabled) return;
+
+    // until she approaches NO, it stays next to YES
+    const rect = noBtn.getBoundingClientRect();
+    const bx = rect.left + rect.width / 2;
+    const by = rect.top + rect.height / 2;
+    const dist = Math.hypot(e.clientX - bx, e.clientY - by);
+
+    if (dist < proximityRadius) {
+      const now = Date.now();
+      if (now - lastTeleport < 120) return;
+
+      activateRunawayIfNeeded();
+      if (showMsg) setRandomNoMessage();
+      teleportNoAwayFromCursor(e.clientX, e.clientY);
+      lastTeleport = now;
+    }
+  }
+
+  // Detect approaching anywhere on the page
+  document.addEventListener("mousemove", (e) => maybeRun(e, false));
+
+  // If she tries to click near it, show message + run
+  document.addEventListener("mousedown", (e) => maybeRun(e, true));
+
+  // Backup: if hover hits it, still runs
   noBtn.addEventListener("mouseenter", (e) => {
+    activateRunawayIfNeeded();
     setRandomNoMessage();
     teleportNoAwayFromCursor(e.clientX, e.clientY);
   });
 
-  noBtn.addEventListener("mousemove", (e) => {
-    teleportNoAwayFromCursor(e.clientX, e.clientY);
-  });
-
-  noBtn.addEventListener("mousedown", (e) => {
-    setRandomNoMessage();
-    teleportNoAwayFromCursor(e.clientX, e.clientY);
-    e.preventDefault();
-  });
-
-  // If a click somehow happens, still block it
+  // Backup: if a click somehow happens, run again
   noBtn.addEventListener("click", (e) => {
+    activateRunawayIfNeeded();
     setRandomNoMessage();
+    teleportNoAwayFromCursor(e.clientX, e.clientY);
     e.preventDefault();
   });
 
@@ -186,22 +205,11 @@
 
     mainImage.src = "yes.jpg";
     mainImage.onerror = () => {
-      message.innerText =
-        yesMessage + " Also upload your yes picture as yes.jpg in the repo root";
+      message.innerText = yesMessage + " Also upload your yes picture as yes.jpg in the repo root";
     };
 
     noDisabled = true;
     noBtn.style.display = "none";
-  });
-
-  // On load, place NO somewhere random (not centered)
-  window.addEventListener("load", () => {
-    teleportNoAwayFromCursor(window.innerWidth / 2, window.innerHeight / 2);
-  });
-
-  // If window resizes, keep NO in bounds by teleporting once
-  window.addEventListener("resize", () => {
-    teleportNoAwayFromCursor(window.innerWidth / 2, window.innerHeight / 2);
   });
 </script>
 </body>
